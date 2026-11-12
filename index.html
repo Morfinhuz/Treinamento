@@ -1,272 +1,470 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Central de Iluminação IoT · 3 Lâmpadas</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(145deg, #d4eaff 0%, #f0f9ff 100%);
-      padding: 1.5rem;
-    }
-    .glass-card {
-      max-width: 900px; width: 100%;
-      background: rgba(255,255,255,0.48);
-      backdrop-filter: blur(14px) saturate(180%);
-      -webkit-backdrop-filter: blur(14px) saturate(180%);
-      border-radius: 2.5rem;
-      border: 1px solid rgba(255,255,255,0.6);
-      box-shadow: 0 20px 40px -12px rgba(0,20,40,0.25);
-      padding: 2rem 2.2rem;
-    }
-    .header {
-      display: flex; flex-wrap: wrap; align-items: baseline;
-      justify-content: space-between; margin-bottom: 1.8rem;
-    }
-    .title-main { font-size: 1.8rem; font-weight: 600; color: #0b2b44; }
-    .title-sub { font-size: 0.9rem; color: #3d5a73; opacity: 0.8; margin-top: 0.1rem; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central de Iluminação IoT</title>
 
-    .status-pill {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      background: rgba(255,255,255,0.5);
-      padding: 0.45rem 1.1rem; border-radius: 60px;
-      border: 1px solid rgba(255,255,255,0.8);
-      font-size: 0.85rem; font-weight: 500; color: #1e2f3f;
-    }
-    .status-dot {
-      width: 12px; height: 12px; border-radius: 50%;
-      background: #fbbf24; flex-shrink: 0;
-      transition: background 0.3s, box-shadow 0.3s;
-    }
-    .status-dot.online { background: #10b981; box-shadow: 0 0 12px #10b98188; }
-    .status-dot.offline { background: #ef4444; }
-    .status-dot.sync { background: #fbbf24; animation: pulse-dot 1.2s infinite; }
-    @keyframes pulse-dot {
-      0%,100% { opacity: 0.6; } 50% { opacity: 1; }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(145deg, #d4eaff, #f0f9ff);
+}
+
+.container {
+    width: 100%;
+    max-width: 750px;
+    padding: 30px;
+    border-radius: 25px;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 15px 40px #34567833;
+}
+
+h1 {
+    text-align: center;
+    color: #0b2b44;
+}
+
+.subtitle {
+    text-align: center;
+    color: #58738a;
+    margin-bottom: 25px;
+}
+
+.status {
+    text-align: center;
+    margin: 20px 0;
+    font-weight: bold;
+    color: #d97706;
+}
+
+.topic-area {
+    margin-bottom: 25px;
+}
+
+input {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #aac4d8;
+    border-radius: 12px;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.led-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.led-card {
+    background: #eaf3fa;
+    padding: 20px 12px;
+    border-radius: 18px;
+    text-align: center;
+}
+
+.led-light {
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    margin: 10px auto 15px;
+    background: #bdcbd5;
+    transition: 0.3s;
+}
+
+.led-light.active {
+    background: #0088ff;
+    box-shadow: 0 0 25px #0088ff, 0 0 50px #0088ff77;
+}
+
+.led-state {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #526879;
+}
+
+button {
+    width: 100%;
+    padding: 12px 8px;
+    margin: 5px 0;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover:not(:disabled) {
+    filter: brightness(0.9);
+    transform: scale(1.02);
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-on {
+    background: #218b65;
+}
+
+.btn-off {
+    background: #bd6262;
+}
+
+.btn-all {
+    background: #bd3434;
+    max-width: 350px;
+    display: block;
+    margin: 25px auto 0;
+    padding: 16px;
+    font-size: 16px;
+}
+
+.footer {
+    text-align: center;
+    font-size: 12px;
+    color: #71889b;
+    margin-top: 25px;
+}
+
+@media(max-width: 560px) {
+    .led-grid {
+        grid-template-columns: 1fr;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.2rem;
-      margin: 1.5rem 0;
+    .container {
+        padding: 20px 14px;
     }
-    @media (max-width: 720px) {
-      .grid { grid-template-columns: 1fr; }
-    }
-
-    .lamp-card {
-      background: rgba(255,255,255,0.55);
-      border-radius: 1.6rem;
-      padding: 1.4rem 1rem 1.2rem;
-      display: flex; flex-direction: column; align-items: center; gap: 0.9rem;
-      border: 1px solid rgba(255,255,255,0.7);
-      box-shadow: 0 8px 24px -8px rgba(0,20,40,0.15);
-      transition: transform 0.2s;
-    }
-    .lamp-card:hover { transform: translateY(-2px); }
-
-    .lamp-title { font-size: 0.95rem; font-weight: 600; color: #0b2b44; letter-spacing: 0.2px; }
-    .lamp-sub   { font-size: 0.7rem; color: #4b6d88; opacity: 0.75; margin-top: -0.4rem; }
-
-    .led-circle {
-      width: 110px; height: 110px; border-radius: 50%;
-      background: #cbdde9;
-      display: flex; align-items: center; justify-content: center;
-      color: #3a5a72; font-size: 0.8rem; font-weight: 500; text-align: center;
-      padding: 0 0.6rem;
-      transition: background 0.4s, box-shadow 0.5s, color 0.3s;
-    }
-    .led-circle.active {
-      background: #ffcf33;
-      color: #4a3600;
-      box-shadow: 0 0 30px #ffcf33aa, 0 0 60px #ffcf3366, inset 0 -4px 12px rgba(255,255,255,0.4);
-      animation: glow-pulse 2.2s ease-in-out infinite;
-    }
-    @keyframes glow-pulse {
-      0%,100% { box-shadow: 0 0 30px #ffcf33aa, 0 0 60px #ffcf3355; }
-      50%     { box-shadow: 0 0 45px #ffcf33dd, 0 0 80px #ffcf3388; }
-    }
-
-    .actions { display: flex; gap: 0.5rem; width: 100%; }
-    .btn {
-      flex: 1; padding: 0.65rem 0.4rem;
-      border: none; border-radius: 40px;
-      font-size: 0.85rem; font-weight: 500;
-      color: white; cursor: pointer;
-      transition: all 0.2s;
-      opacity: 0.45; cursor: not-allowed;
-    }
-    .btn.enabled { opacity: 1; cursor: pointer; }
-    .btn.enabled:active { transform: scale(0.95); }
-    .btn-on  { background: #2d8f6f; }
-    .btn-on.enabled:hover  { background: #1f7a5d; }
-    .btn-off { background: #bf7a7a; }
-    .btn-off.enabled:hover { background: #ac6363; }
-
-    .footer {
-      margin-top: 1rem; text-align: center;
-      font-size: 0.7rem; color: #6a8aa3; opacity: 0.6;
-    }
-  </style>
+}
+</style>
 </head>
+
 <body>
-<div class="glass-card">
-  <div class="header">
-    <div>
-      <span class="title-main">💡 Central de Iluminação</span>
-      <div class="title-sub">3 lâmpadas · Pinos 11, 12 e 13</div>
-    </div>
-    <div class="status-pill">
-      <span class="status-dot sync" id="statusDot"></span>
-      <span id="statusText">Sincronizando...</span>
-    </div>
-  </div>
 
-  <div class="grid">
-    <!-- Lâmpada 1 -->
-    <div class="lamp-card" data-lamp="1">
-      <div class="lamp-title">💡 Lâmpada 1</div>
-      <div class="lamp-sub">Pino 11</div>
-      <div class="led-circle" id="led1">Desligada</div>
-      <div class="actions">
-        <button class="btn btn-on"  data-lamp="1" data-cmd="1" disabled>LIGAR</button>
-        <button class="btn btn-off" data-lamp="1" data-cmd="0" disabled>DESLIGAR</button>
-      </div>
+<div class="container">
+
+    <h1>💡 Central de Iluminação</h1>
+
+    <p class="subtitle">
+        Sistema de Controle IoT - Arduino Uno
+    </p>
+
+    <div class="status" id="status">
+        🟡 Conectando ao HiveMQ...
     </div>
 
-    <!-- Lâmpada 2 -->
-    <div class="lamp-card" data-lamp="2">
-      <div class="lamp-title">💡 Lâmpada 2</div>
-      <div class="lamp-sub">Pino 12</div>
-      <div class="led-circle" id="led2">Desligada</div>
-      <div class="actions">
-        <button class="btn btn-on"  data-lamp="2" data-cmd="1" disabled>LIGAR</button>
-        <button class="btn btn-off" data-lamp="2" data-cmd="0" disabled>DESLIGAR</button>
-      </div>
+    <div class="topic-area">
+        <label for="topicInput">
+            📡 Tópico MQTT (base)
+        </label>
+
+        <input
+            type="text"
+            id="topicInput"
+            value="gerry_sanchez_led_exclusivo/arduino"
+            spellcheck="false"
+        >
     </div>
 
-    <!-- Lâmpada 3 -->
-    <div class="lamp-card" data-lamp="3">
-      <div class="lamp-title">💡 Lâmpada 3</div>
-      <div class="lamp-sub">Pino 13</div>
-      <div class="led-circle" id="led3">Desligada</div>
-      <div class="actions">
-        <button class="btn btn-on"  data-lamp="3" data-cmd="1" disabled>LIGAR</button>
-        <button class="btn btn-off" data-lamp="3" data-cmd="0" disabled>DESLIGAR</button>
-      </div>
-    </div>
-  </div>
+    <div class="led-grid">
 
-  <div class="footer">atualização via MQTT · broker.hivemq.com</div>
+        <!-- LED 1 -->
+
+        <div class="led-card">
+
+            <h3>LED 1</h3>
+            <p>Pino 11</p>
+
+            <div class="led-light" id="light1"></div>
+
+            <div class="led-state" id="state1">
+                DESLIGADO
+            </div>
+
+            <button class="btn-on"
+                onclick="enviarComando('LED1_ON')"
+                disabled>
+                LIGAR
+            </button>
+
+            <button class="btn-off"
+                onclick="enviarComando('LED1_OFF')"
+                disabled>
+                DESLIGAR
+            </button>
+
+        </div>
+
+        <!-- LED 2 -->
+
+        <div class="led-card">
+
+            <h3>LED 2</h3>
+            <p>Pino 12</p>
+
+            <div class="led-light" id="light2"></div>
+
+            <div class="led-state" id="state2">
+                DESLIGADO
+            </div>
+
+            <button class="btn-on"
+                onclick="enviarComando('LED2_ON')"
+                disabled>
+                LIGAR
+            </button>
+
+            <button class="btn-off"
+                onclick="enviarComando('LED2_OFF')"
+                disabled>
+                DESLIGAR
+            </button>
+
+        </div>
+
+        <!-- LED 3 -->
+
+        <div class="led-card">
+
+            <h3>LED 3</h3>
+            <p>Pino 13</p>
+
+            <div class="led-light" id="light3"></div>
+
+            <div class="led-state" id="state3">
+                DESLIGADO
+            </div>
+
+            <button class="btn-on"
+                onclick="enviarComando('LED3_ON')"
+                disabled>
+                LIGAR
+            </button>
+
+            <button class="btn-off"
+                onclick="enviarComando('LED3_OFF')"
+                disabled>
+                DESLIGAR
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- BOTAO GERAL -->
+
+    <button class="btn-all"
+        onclick="enviarComando('TODOS_OFF')"
+        disabled>
+        ⏻ DESLIGAR TODOS OS LEDs
+    </button>
+
+    <div class="footer">
+        Comunicação MQTT · HiveMQ · Arduino Uno
+    </div>
+
 </div>
 
 <script>
-(function () {
-  const statusDot  = document.getElementById('statusDot');
-  const statusText = document.getElementById('statusText');
-  const ledEl = { '1': document.getElementById('led1'), '2': document.getElementById('led2'), '3': document.getElementById('led3') };
-  const allButtons = document.querySelectorAll('.btn');
 
-  const TOPIC_BASE = 'casa';
-  const LAMPS = ['1', '2', '3'];
+// ==========================================
+// 1. CONFIGURACOES MQTT
+// ==========================================
 
-  let client = null;
-  let isConnected = false;
-  const state = { '1': 0, '2': 0, '3': 0 };
+const BROKER = "broker.hivemq.com";
+const PORTA = 8884;
+const CAMINHO = "/mqtt";
 
-  function setStatus(mode, msg) {
-    statusDot.className = 'status-dot ' + mode;
-    statusText.textContent = msg;
-  }
+let client = null;
+let conectado = false;
 
-  function updateLed(lamp, value) {
-    state[lamp] = value;
-    const el = ledEl[lamp];
-    if (value === 1) {
-      el.classList.add('active');
-      el.textContent = 'Ligada';
-    } else {
-      el.classList.remove('active');
-      el.textContent = 'Desligada';
-    }
-  }
+const topicInput = document.getElementById("topicInput");
 
-  function setButtonsEnabled(enabled) {
-    allButtons.forEach(b => {
-      b.disabled = !enabled;
-      b.classList.toggle('enabled', enabled);
+let topicoBase = topicInput.value.trim();
+
+let topicoComando = topicoBase + "/command";
+let topicoStatus = topicoBase + "/status";
+
+// ==========================================
+// 2. ELEMENTOS DA INTERFACE
+// ==========================================
+
+const botoes = document.querySelectorAll("button");
+
+const statusSistema = document.getElementById("status");
+
+// ==========================================
+// 3. STATUS DE CONEXAO
+// ==========================================
+
+function atualizarConexao(estado, mensagem) {
+
+    conectado = estado;
+
+    statusSistema.textContent = mensagem;
+
+    botoes.forEach(botao => {
+        botao.disabled = !estado;
     });
-  }
+}
 
-  function topicSet(lamp)   { return `${TOPIC_BASE}/lampada${lamp}/set`; }
-  function topicState(lamp) { return `${TOPIC_BASE}/lampada${lamp}/state`; }
+// ==========================================
+// 4. ATUALIZACAO DOS LEDS
+// ==========================================
 
-  function connectMqtt() {
-    if (client) { try { client.disconnect(); } catch (_) {} }
-    const clientId = 'web_' + Math.random().toString(16).slice(2, 10);
-    client = new Paho.MQTT.Client('broker.hivemq.com', 8884, clientId);
+function atualizarLEDs(estados) {
 
-    client.onConnectionLost = (r) => {
-      isConnected = false;
-      setStatus('offline', 'Conexão perdida');
-      setButtonsEnabled(false);
-      setTimeout(connectMqtt, 4000);
-    };
+    for (let i = 1; i <= 3; i++) {
 
-    client.onMessageArrived = (msg) => {
-      const topico = msg.destinationName;
-      const payload = msg.payloadString.trim();
-      LAMPS.forEach(l => {
-        if (topico === topicState(l)) {
-          updateLed(l, parseInt(payload) === 1 ? 1 : 0);
+        const ligado = estados["led" + i];
+
+        const luz = document.getElementById("light" + i);
+        const texto = document.getElementById("state" + i);
+
+        if (ligado) {
+
+            luz.classList.add("active");
+            texto.textContent = "LIGADO";
+
+        } else {
+
+            luz.classList.remove("active");
+            texto.textContent = "DESLIGADO";
+
         }
-      });
+    }
+}
+
+// ==========================================
+// 5. CONEXAO COM HIVEMQ
+// ==========================================
+
+function conectarMQTT() {
+
+    atualizarConexao(false, "🟡 Conectando ao HiveMQ...");
+
+    const clientId =
+        "github_led_" +
+        Math.random().toString(16).substring(2, 12);
+
+    client = new Paho.MQTT.Client(
+        BROKER,
+        PORTA,
+        CAMINHO,
+        clientId
+    );
+
+    client.onConnectionLost = function(response) {
+
+        atualizarConexao(false, "🔴 Conexão perdida");
+
+        console.log("Conexão perdida:", response.errorMessage);
+
+        setTimeout(conectarMQTT, 5000);
     };
 
-    const onConnect = () => {
-      isConnected = true;
-      setStatus('online', 'Sistema Online');
-      setButtonsEnabled(true);
-      LAMPS.forEach(l => client.subscribe(topicState(l), { qos: 0 }));
-    };
+    client.onMessageArrived = function(message) {
 
-    const onFailure = () => {
-      isConnected = false;
-      setStatus('offline', 'Falha na conexão');
-      setButtonsEnabled(false);
-      setTimeout(connectMqtt, 5000);
+        if (message.destinationName !== topicoStatus) {
+            return;
+        }
+
+        try {
+
+            const estados = JSON.parse(message.payloadString);
+
+            atualizarLEDs(estados);
+
+            console.log("Estados atualizados:", estados);
+
+        } catch (erro) {
+
+            console.error("Erro ao interpretar status:", erro);
+
+        }
     };
 
     client.connect({
-      useSSL: true, timeout: 10,
-      onSuccess: onConnect, onFailure: onFailure,
+
+        useSSL: true,
+
+        timeout: 10,
+
+        onSuccess: function() {
+
+            console.log("Conectado ao HiveMQ!");
+
+            atualizarConexao(true, "🟢 Sistema Online");
+
+            client.subscribe(topicoStatus);
+
+        },
+
+        onFailure: function(erro) {
+
+            atualizarConexao(false, "🔴 Falha na conexão");
+
+            console.log("Erro MQTT:", erro);
+
+            setTimeout(conectarMQTT, 5000);
+        }
     });
-  }
+}
 
-  function publish(lamp, value) {
-    if (!client || !isConnected) return;
-    const msg = new Paho.MQTT.Message(String(value));
-    msg.destinationName = topicSet(lamp);
-    client.send(msg);
-  }
+// ==========================================
+// 6. ENVIO DOS COMANDOS
+// ==========================================
 
-  allButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (!isConnected) return;
-      publish(btn.dataset.lamp, btn.dataset.cmd);
-    });
-  });
+function enviarComando(comando) {
 
-  // inicial
-  setStatus('sync', 'Sincronizando...');
-  LAMPS.forEach(l => updateLed(l, 0));
-  connectMqtt();
-})();
+    if (!client || !conectado) {
+
+        alert("Sistema desconectado do HiveMQ!");
+
+        return;
+    }
+
+    const mensagem = new Paho.MQTT.Message(comando);
+
+    mensagem.destinationName = topicoComando;
+    mensagem.qos = 0;
+
+    client.send(mensagem);
+
+    console.log("Comando enviado:", comando);
+}
+
+// ==========================================
+// 7. INICIALIZACAO
+// ==========================================
+
+atualizarLEDs({
+    led1: false,
+    led2: false,
+    led3: false
+});
+
+conectarMQTT();
+
 </script>
+
 </body>
 </html>
