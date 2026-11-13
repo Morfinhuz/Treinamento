@@ -4,7 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Central de Iluminação IoT</title>
+
+<title>Teclado Morse IoT</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
 
@@ -15,143 +16,120 @@
 }
 
 body {
-    margin: 0;
+    background: linear-gradient(145deg, #d4eaff, #f0f9ff);
     min-height: 100vh;
-    padding: 25px;
+    padding: 20px;
     display: flex;
     justify-content: center;
-    align-items: center;
-    background: linear-gradient(145deg, #d4eaff, #f0f9ff);
 }
 
 .container {
+    background: white;
     width: 100%;
-    max-width: 750px;
-    padding: 30px;
-    border-radius: 25px;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 15px 40px #34567833;
+    max-width: 650px;
+    padding: 25px;
+    border-radius: 22px;
+    box-shadow: 0 10px 35px #34567833;
 }
 
-h1 {
+h1, .subtitle {
     text-align: center;
-    color: #0b2b44;
 }
 
 .subtitle {
-    text-align: center;
-    color: #58738a;
-    margin-bottom: 25px;
+    color: #668096;
 }
 
 .status {
     text-align: center;
-    margin: 20px 0;
+    margin: 20px;
     font-weight: bold;
-    color: #d97706;
 }
 
-.topic-area {
-    margin-bottom: 25px;
+.display {
+    background: #edf5fa;
+    padding: 18px;
+    border-radius: 12px;
+    font-size: 22px;
+    min-height: 65px;
+    overflow-wrap: anywhere;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+.keyboard {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 7px;
+    margin-top: 20px;
+}
+
+.key {
+    padding: 13px 4px;
+    border: none;
+    border-radius: 9px;
+    background: #dcecf8;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.key:hover {
+    background: #a9d1ee;
+}
+
+.actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.action {
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.send {
+    background: #218b65;
+}
+
+.clear {
+    background: #71869a;
+}
+
+.stop {
+    background: #bd3434;
+    grid-column: span 2;
+}
+
+.action:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+button {
+    transition: .2s;
+}
+
+button:active:not(:disabled) {
+    transform: scale(.96);
 }
 
 input {
     width: 100%;
-    padding: 13px;
+    padding: 12px;
+    border-radius: 10px;
     border: 1px solid #aac4d8;
-    border-radius: 12px;
-    margin-top: 8px;
-    font-size: 14px;
+    margin-top: 10px;
 }
 
-.led-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-}
-
-.led-card {
-    background: #eaf3fa;
-    padding: 20px 12px;
-    border-radius: 18px;
-    text-align: center;
-}
-
-.led-light {
-    width: 85px;
-    height: 85px;
-    border-radius: 50%;
-    margin: 10px auto 15px;
-    background: #bdcbd5;
-    transition: 0.3s;
-}
-
-.led-light.active {
-    background: #0088ff;
-    box-shadow: 0 0 25px #0088ff, 0 0 50px #0088ff77;
-}
-
-.led-state {
-    font-size: 14px;
-    font-weight: bold;
-    margin-bottom: 15px;
-    color: #526879;
-}
-
-button {
-    width: 100%;
-    padding: 12px 8px;
-    margin: 5px 0;
-    border: none;
-    border-radius: 12px;
-    color: white;
-    font-weight: bold;
-    font-size: 14px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-button:hover:not(:disabled) {
-    filter: brightness(0.9);
-    transform: scale(1.02);
-}
-
-button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.btn-on {
-    background: #218b65;
-}
-
-.btn-off {
-    background: #bd6262;
-}
-
-.btn-all {
-    background: #bd3434;
-    max-width: 350px;
-    display: block;
-    margin: 25px auto 0;
-    padding: 16px;
-    font-size: 16px;
-}
-
-.footer {
-    text-align: center;
-    font-size: 12px;
-    color: #71889b;
-    margin-top: 25px;
-}
-
-@media(max-width: 560px) {
-    .led-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .container {
-        padding: 20px 14px;
+@media(max-width:450px) {
+    .keyboard {
+        grid-template-columns: repeat(5, 1fr);
     }
 }
 </style>
@@ -161,308 +139,259 @@ button:disabled {
 
 <div class="container">
 
-    <h1>💡 Central de Iluminação</h1>
+<h1>📡 Teclado Morse IoT</h1>
 
-    <p class="subtitle">
-        Sistema de Controle IoT - Arduino Uno
-    </p>
+<p class="subtitle">
+Arduino Uno · HiveMQ · Código Morse
+</p>
 
-    <div class="status" id="status">
-        🟡 Conectando ao HiveMQ...
-    </div>
+<div class="status" id="status">
+🟡 Conectando...
+</div>
 
-    <div class="topic-area">
-        <label for="topicInput">
-            📡 Tópico MQTT (base)
-        </label>
+<div class="display" id="display">
+Digite uma mensagem
+</div>
 
-        <input
-            type="text"
-            id="topicInput"
-            value="TesteVOS"
-            spellcheck="false"
-        >
-    </div>
+<input
+    id="texto"
+    type="text"
+    placeholder="Ou digite sua mensagem aqui"
+    maxlength="40"
+>
 
-    <div class="led-grid">
+<div class="keyboard" id="keyboard"></div>
 
-        <!-- LED 1 -->
+<div class="actions">
 
-        <div class="led-card">
+<button class="action clear" onclick="apagar()">
+⌫ APAGAR
+</button>
 
-            <h3>LED 1</h3>
-            <p>Pino 11</p>
+<button class="action clear" onclick="limpar()">
+LIMPAR
+</button>
 
-            <div class="led-light" id="light1"></div>
+<button class="action send" id="enviar" onclick="enviar()">
+📡 TRANSMITIR
+</button>
 
-            <div class="led-state" id="state1">
-                DESLIGADO
-            </div>
+<button class="action stop" id="parar" onclick="parar()">
+⏹ INTERROMPER
+</button>
 
-            <button class="btn-on"
-                onclick="enviarComando('LED1_ON')"
-                disabled>
-                LIGAR
-            </button>
-
-            <button class="btn-off"
-                onclick="enviarComando('LED1_OFF')"
-                disabled>
-                DESLIGAR
-            </button>
-
-        </div>
-
-        <!-- LED 2 -->
-
-        <div class="led-card">
-
-            <h3>LED 2</h3>
-            <p>Pino 12</p>
-
-            <div class="led-light" id="light2"></div>
-
-            <div class="led-state" id="state2">
-                DESLIGADO
-            </div>
-
-            <button class="btn-on"
-                onclick="enviarComando('LED2_ON')"
-                disabled>
-                LIGAR
-            </button>
-
-            <button class="btn-off"
-                onclick="enviarComando('LED2_OFF')"
-                disabled>
-                DESLIGAR
-            </button>
-
-        </div>
-
-        <!-- LED 3 -->
-
-        <div class="led-card">
-
-            <h3>LED 3</h3>
-            <p>Pino 13</p>
-
-            <div class="led-light" id="light3"></div>
-
-            <div class="led-state" id="state3">
-                DESLIGADO
-            </div>
-
-            <button class="btn-on"
-                onclick="enviarComando('LED3_ON')"
-                disabled>
-                LIGAR
-            </button>
-
-            <button class="btn-off"
-                onclick="enviarComando('LED3_OFF')"
-                disabled>
-                DESLIGAR
-            </button>
-
-        </div>
-
-    </div>
-
-    <!-- BOTAO GERAL -->
-
-    <button class="btn-all"
-        onclick="enviarComando('TODOS_OFF')"
-        disabled>
-        ⏻ DESLIGAR TODOS OS LEDs
-    </button>
-
-    <div class="footer">
-        Comunicação MQTT · HiveMQ · Arduino Uno
-    </div>
+</div>
 
 </div>
 
 <script>
 
 // ==========================================
-// 1. CONFIGURACOES MQTT
+// CONFIGURACOES
 // ==========================================
 
 const BROKER = "broker.hivemq.com";
 const PORTA = 8884;
 const CAMINHO = "/mqtt";
 
-let client = null;
+const TOPICO_BASE = "TesteVOS";
+const TOPICO_TEXTO = TOPICO_BASE + "/texto";
+
+let client;
 let conectado = false;
 
-const topicInput = document.getElementById("topicInput");
+let mensagem = "";
 
-let topicoBase = topicInput.value.trim();
-
-let topicoComando = topicoBase + "/command";
-let topicoStatus = topicoBase + "/status";
+const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const numeros = "0123456789";
 
 // ==========================================
-// 2. ELEMENTOS DA INTERFACE
+// TECLADO
 // ==========================================
 
-const botoes = document.querySelectorAll("button");
+function criarTeclado() {
 
-const statusSistema = document.getElementById("status");
+    const teclado = document.getElementById("keyboard");
 
-// ==========================================
-// 3. STATUS DE CONEXAO
-// ==========================================
+    const caracteres = letras + numeros;
 
-function atualizarConexao(estado, mensagem) {
+    for (const caractere of caracteres) {
 
-    conectado = estado;
+        const botao = document.createElement("button");
 
-    statusSistema.textContent = mensagem;
+        botao.className = "key";
+        botao.textContent = caractere;
 
-    botoes.forEach(botao => {
-        botao.disabled = !estado;
-    });
+        botao.onclick = function() {
+            adicionar(caractere);
+        };
+
+        teclado.appendChild(botao);
+    }
+
+    const espaco = document.createElement("button");
+
+    espaco.className = "key";
+    espaco.textContent = "ESPAÇO";
+    espaco.style.gridColumn = "span 3";
+
+    espaco.onclick = function() {
+        adicionar(" ");
+    };
+
+    teclado.appendChild(espaco);
 }
 
 // ==========================================
-// 4. ATUALIZACAO DOS LEDS
+// TEXTO
 // ==========================================
 
-function atualizarLEDs(estados) {
+function atualizarDisplay() {
 
-    for (let i = 1; i <= 3; i++) {
+    document.getElementById("display").textContent =
+        mensagem || "Digite uma mensagem";
 
-        const ligado = estados["led" + i];
+    document.getElementById("texto").value = mensagem;
+}
 
-        const luz = document.getElementById("light" + i);
-        const texto = document.getElementById("state" + i);
+function adicionar(letra) {
 
-        if (ligado) {
-
-            luz.classList.add("active");
-            texto.textContent = "LIGADO";
-
-        } else {
-
-            luz.classList.remove("active");
-            texto.textContent = "DESLIGADO";
-
-        }
+    if (mensagem.length < 40) {
+        mensagem += letra;
+        atualizarDisplay();
     }
 }
 
+function apagar() {
+
+    mensagem = mensagem.slice(0, -1);
+
+    atualizarDisplay();
+}
+
+function limpar() {
+
+    mensagem = "";
+
+    atualizarDisplay();
+}
+
 // ==========================================
-// 5. CONEXAO COM HIVEMQ
+// CONEXAO MQTT
 // ==========================================
 
-function conectarMQTT() {
+function conectar() {
 
-    atualizarConexao(false, "🟡 Conectando ao HiveMQ...");
-
-    const clientId =
-        "github_led_" +
-        Math.random().toString(16).substring(2, 12);
+    document.getElementById("status").textContent =
+        "🟡 Conectando ao HiveMQ...";
 
     client = new Paho.MQTT.Client(
         BROKER,
         PORTA,
         CAMINHO,
-        clientId
+        "morse_" + Math.random().toString(16).slice(2, 12)
     );
 
-    client.onConnectionLost = function(response) {
+    client.onConnectionLost = function() {
 
-        atualizarConexao(false, "🔴 Conexão perdida");
+        conectado = false;
 
-        console.log("Conexão perdida:", response.errorMessage);
+        document.getElementById("status").textContent =
+            "🔴 Conexão perdida";
 
-        setTimeout(conectarMQTT, 5000);
-    };
-
-    client.onMessageArrived = function(message) {
-
-        if (message.destinationName !== topicoStatus) {
-            return;
-        }
-
-        try {
-
-            const estados = JSON.parse(message.payloadString);
-
-            atualizarLEDs(estados);
-
-            console.log("Estados atualizados:", estados);
-
-        } catch (erro) {
-
-            console.error("Erro ao interpretar status:", erro);
-
-        }
+        setTimeout(conectar, 5000);
     };
 
     client.connect({
 
         useSSL: true,
 
-        timeout: 10,
-
         onSuccess: function() {
 
-            console.log("Conectado ao HiveMQ!");
+            conectado = true;
 
-            atualizarConexao(true, "🟢 Sistema Online");
+            document.getElementById("status").textContent =
+                "🟢 Conectado ao HiveMQ";
 
-            client.subscribe(topicoStatus);
+            console.log("MQTT conectado!");
 
         },
 
         onFailure: function(erro) {
 
-            atualizarConexao(false, "🔴 Falha na conexão");
+            conectado = false;
 
-            console.log("Erro MQTT:", erro);
+            document.getElementById("status").textContent =
+                "🔴 Falha de conexão";
 
-            setTimeout(conectarMQTT, 5000);
+            console.log(erro);
+
+            setTimeout(conectar, 5000);
         }
     });
 }
 
 // ==========================================
-// 6. ENVIO DOS COMANDOS
+// TRANSMISSAO
 // ==========================================
 
-function enviarComando(comando) {
+function publicar(texto) {
 
-    if (!client || !conectado) {
+    if (!conectado || !client) {
+        alert("Conecte-se ao HiveMQ primeiro!");
+        return false;
+    }
 
-        alert("Sistema desconectado do HiveMQ!");
+    const mensagemMQTT = new Paho.MQTT.Message(texto);
 
+    mensagemMQTT.destinationName = TOPICO_TEXTO;
+    mensagemMQTT.qos = 0;
+
+    client.send(mensagemMQTT);
+
+    return true;
+}
+
+function enviar() {
+
+    const campo = document.getElementById("texto");
+
+    mensagem = campo.value.toUpperCase().trim();
+
+    if (!mensagem) {
+        alert("Digite uma mensagem!");
         return;
     }
 
-    const mensagem = new Paho.MQTT.Message(comando);
+    if (publicar(mensagem)) {
+        console.log("Mensagem enviada:", mensagem);
+        mensagem = "";
+        atualizarDisplay();
+    }
+}
 
-    mensagem.destinationName = topicoComando;
-    mensagem.qos = 0;
+function parar() {
 
-    client.send(mensagem);
+    publicar("STOP");
 
-    console.log("Comando enviado:", comando);
+    console.log("Interrupção solicitada.");
 }
 
 // ==========================================
-// 7. INICIALIZACAO
+// INICIALIZACAO
 // ==========================================
 
-atualizarLEDs({
-    led1: false,
-    led2: false,
-    led3: false
-});
+document.getElementById("texto").addEventListener(
+    "input",
+    function() {
+        mensagem = this.value.toUpperCase();
+        atualizarDisplay();
+    }
+);
 
-conectarMQTT();
+criarTeclado();
+atualizarDisplay();
+conectar();
 
 </script>
 
